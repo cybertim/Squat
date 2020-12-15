@@ -1,13 +1,10 @@
-/// <reference lib="es2017" />
 /// <reference lib="dom" />
-/// <reference lib="dom.iterable" />
-/// <reference lib="scripthost" />
 
 import { Scope } from "./Scope.ts";
 
 export type Directive = {
     scope: boolean;
-    link: (elem: HTMLElement, scope: Scope, expression: string) => void;
+    link: (elem: HTMLElement, scope: Scope, action: string) => void;
 };
 
 export type Controller = (scope: Scope) => void;
@@ -16,6 +13,7 @@ export class Provider {
     private static _instance: Provider;
     private _directives: Map<string, Directive> = new Map();
     private _controller: Map<string, Controller> = new Map();
+    private _root = new Scope();
 
     public static instance() {
         if (!Provider._instance) {
@@ -36,17 +34,14 @@ export class Provider {
         return this._directives.get(name);
     }
 
-    // private invoke(provider: Directive, locals?: Map<string, string>) {
-    //     locals = locals || new Map();
-    //     this.annotate(provider).map;
-    // }
+    public invoke(name: string) {
+        // TODO: maybe map / cache controller per scope
+        const controller = this._controller.get(name);
+        if (controller) controller(this._root);
+    }
 
-    // private annotate(fn: Directive) {
-    //     const res = fn.toString().replace(/((\/\/.*$)|(\/\*[\s\S]*?\*\/))/mg, "")
-    //         .match(/\((.*?)\)/);
-    //     if (res && res[1]) {
-    //         return res[1].split(",").map((d) => d.trim());
-    //     }
-    //     return [];
-    // }
+    public root() {
+        return this._root;
+    }
+
 }

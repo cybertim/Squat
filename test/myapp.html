@@ -6,7 +6,16 @@
 
 <body sqt-controller="MainCtrl">
     <span sqt-bind="bar"></span>
-    <button sqt-click="foo()">Increment</button>
+    <input sqt-model="bar" type="text">
+    <button sqt-click="foo">Increment</button>
+
+    <section>
+        <input type="text" sqt-model="todo"><button sqt-click="add()">Add</button>
+        <ul>
+            <li sqt-repeat="todo in todos" sqt-bind="todo"></li>
+        </ul>
+    </section>
+
     <script type="text/javascript" src="myapp.js"></script>
 </body>
 

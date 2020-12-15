@@ -1,11 +1,13 @@
+/// <reference lib="esNext" />
+/// <reference lib="dom" />
+
 import { Scope } from "./Scope.ts";
 import { Provider } from "./Provider.ts";
 
-export class DOMCompiler {
+export class Compiler {
 
   public static bootstrap() {
-    const root = new Scope();
-    this.compile(document.children[0], root);
+    this.compile(document.children[0], Provider.instance().root());
   }
 
   private static callDirectives(elem: Element, scope: Scope) {
@@ -18,7 +20,7 @@ export class DOMCompiler {
     }
   }
 
-  private static compile(elem: Element, scope: Scope) {
+  public static compile(elem: Element, scope: Scope) {
     this.callDirectives(elem, scope);
     for (let i = 0; i < elem.children.length; i++) {
       const child = elem.children.item(i);
