@@ -1,5 +1,3 @@
-/// <reference lib="dom" />
-
 import { Scope } from "./Scope.ts";
 
 export type Directive = {

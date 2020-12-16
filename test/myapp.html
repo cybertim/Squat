@@ -5,15 +5,25 @@
 </head>
 
 <body sqt-controller="MainCtrl">
-    <span sqt-bind="bar"></span>
-    <input sqt-model="bar" type="text">
-    <button sqt-click="foo">Increment</button>
 
     <section>
-        <input type="text" sqt-model="todo"><button sqt-click="add()">Add</button>
-        <ul>
-            <li sqt-repeat="todo in todos" sqt-bind="todo"></li>
-        </ul>
+        <span sqt-bind="bar"></span>
+        <input sqt-model="bar" type="text">
+        <button sqt-click="foo()">Increment</button>
+    </section>
+
+    <section>
+        <input type="text" sqt-model="todo.description">
+        <input type="number" sqt-model="todo.priority">
+        <button sqt-click="add()">Add</button>
+
+        <table>
+            <tr sqt-repeat="todo in todos.list">
+                <td>#</td>
+                <td sqt-bind="todo.description"></td>
+                <td sqt-bind="todo.priority"></td>
+            </tr>
+        </table>
     </section>
 
     <script type="text/javascript" src="myapp.js"></script>

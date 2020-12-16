@@ -1,31 +1,46 @@
-
-export type Watcher = {
-    act: string,
-    fn: (value: string[] | string) => void,
-    last?: string | string[]
-}
-
-export type Action = (scope: Scope) => (void | string);
+import { SQTAction, SQTObject, SQTWatcher } from "./Interfaces.ts";
 
 export class Scope {
 
     private static counter = 0;
     public children: Scope[] = [];
-    private watchers: Watcher[] = [];
+    private watchers: SQTWatcher[] = [];
 
-    private actions: Map<string, Action> = new Map();
-    public values: Map<string, string[] | string> = new Map();
+    private actions: Map<string, SQTAction> = new Map();
+    public objects: Map<string, SQTObject> = new Map();
 
     constructor(private id?: number, public parent?: Scope) {
         id = id || 0;
     }
 
-    public value(name: string, value: string[] | string) {
-        this.values.set(name, value);
+    public setObject<T extends SQTObject>(name: string, object: T) {
+        const ref = Scope.sanitize(name);
+        if (!object.uuid) object.uuid = Scope.uuidv4();
+        this.objects.set(ref, object);
     }
 
-    public action(name: string, action: Action) {
+    public getObject<T extends SQTObject>(name: string) {
+        const ref = Scope.sanitize(name);
+        const obj = this.objects.get(ref);
+        if (obj) return <T>obj;
+        else return undefined;
+    }
+
+    public setAction(name: string, action: SQTAction) {
         this.actions.set(name, action);
+    }
+
+    public execAction(name: string) {
+        const obj = this.objects.get(name);
+        const act = this.actions.get(name);
+        if (act) {
+            act(obj);
+        }
+    }
+
+    public subscribe(watcher: SQTWatcher) {
+        watcher.name = Scope.sanitize(watcher.name);
+        this.watchers.push(watcher);
     }
 
     public new() {
@@ -35,54 +50,80 @@ export class Scope {
         return obj;
     }
 
-    public watch(watcher: Watcher) {
-        this.watchers.push(watcher);
-    }
-
-    public exec(act: string) {
-        const action = this.actions.get(act);
-        if (action) return action(this);
-        else return undefined;
-    }
-
     public destroy() {
         const pc = this.parent?.children;
         if (pc) pc.splice(pc.indexOf(this), 1);
     }
 
     public digest() {
-        // let dirty = false;
-        let watcher: Watcher;
-        // do {
-        //     dirty = false;
         for (let i = 0; i < this.watchers.length; i++) {
-            watcher = this.watchers[i];
-            const val = this.values.get(watcher.act);//this.exec(watcher.act);
-            if (val && val !== watcher.last) {
-                watcher.last = val;
-                watcher.fn(val);
+            const watcher = this.watchers[i];
+            const value = this.getObject(watcher.name);
+            if (value && !Scope.equals(value, watcher.last)) {
+                watcher.last = Scope.clone(value);
+                watcher.callback(value);
             }
-            // if (!Scope.equals(watcher.last, current)) {
-            //     watcher.last = Scope.clone(current);
-            //     dirty = true;
-            //     watcher.fn(current);
-            // }
         }
-        // } while (dirty);
         for (let i = 0; i < this.children.length; i++) {
             this.children[i].digest();
         }
     }
 
-    // private static equals(a: unknown, b: unknown) {
-    //     return JSON.stringify(a) === JSON.stringify(b);
-    // }
+    private static equals(a: unknown, b: unknown) {
+        return JSON.stringify(a) === JSON.stringify(b);
+    }
 
-    // private static clone(a: unknown) {
-    //     try {
-    //         return JSON.parse(JSON.stringify(a));
-    //     } catch (e) {
-    //         return undefined;
-    //     }
-    // }
+    public static get(obj: SQTObject, action: string) {
+        const parts = action.trim().split('.');
+        let itemName = action;
+        let memberName = "";
+        if (parts.length > 0) {
+            itemName = parts[0];
+            memberName = parts[1];
+        }
+        if (memberName && memberName.length > 0) {
+            //const v = Object.getOwnPropertyDescriptor(obj, memberName);
+            //if (v && v.value) return v.value;
+            return (<Record<string, string>>obj)[memberName];
+        } else {
+            return obj.value;
+        }
+    }
+
+    public static set(obj: SQTObject, action: string, val: string) {
+        const parts = action.trim().split('.');
+        let itemName = action;
+        let memberName = "";
+        if (parts.length > 0) {
+            itemName = parts[0];
+            memberName = parts[1];
+        }
+        if (memberName && memberName.length > 0) {
+            (<Record<string, string>>obj)[memberName] = val;
+        } else {
+            obj.value = val;
+        }
+        return obj;
+    }
+
+    public static sanitize(action: string) {
+        const parts = action.trim().split('.');
+        return parts[0];
+    }
+
+    public static uuidv4() {
+        return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+            const r = Math.random() * 16 | 0, v = c == 'x' ? r : (r & 0x3 | 0x8);
+            return v.toString(16);
+        });
+    }
+
+    private static clone(a: unknown) {
+        try {
+            return JSON.parse(JSON.stringify(a));
+        } catch (e) {
+            return undefined;
+        }
+    }
+
 }
