@@ -5,9 +5,8 @@
 /// <reference lib="dom.iterable" />
 /// <reference no-default-lib="true"/>
 
-import { Scope } from "./Scope.ts";
+import { Scope, SQTObject } from "./Scope.ts";
 import { Provider } from "./Provider.ts";
-import { SQTObject } from "./Interfaces.ts";
 
 export class Compiler {
 

@@ -1,6 +1,6 @@
 import { Compiler } from "../lib/Compiler.ts";
-import { SQTObject } from "../lib/Interfaces.ts";
 import { Provider } from "../lib/Provider.ts";
+import { SQTObject } from "../lib/Scope.ts";
 
 Provider.instance().controller("MainCtrl", (scope) => {
 
@@ -31,6 +31,10 @@ Provider.instance().controller("MainCtrl", (scope) => {
             });
             scope.setObject("todos", todos);
         }
+    });
+
+    scope.setAction("delete()", (scope) => {
+        console.log("clicked del", scope?.getObject("todo"));
     });
 
 });

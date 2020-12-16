@@ -19,7 +19,7 @@
 
         <table>
             <tr sqt-repeat="todo in todos.list">
-                <td>#</td>
+                <td><button sqt-click="delete()">delete</button></td>
                 <td sqt-bind="todo.description"></td>
                 <td sqt-bind="todo.priority"></td>
             </tr>

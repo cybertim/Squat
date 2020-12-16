@@ -1,4 +1,15 @@
-import { SQTAction, SQTObject, SQTWatcher } from "./Interfaces.ts";
+export type SQTWatcher = {
+    name: string,
+    callback: (obj?: SQTObject) => void,
+    last?: SQTObject
+}
+
+export class SQTObject {
+    uuid?: string;
+    value?: string;
+}
+
+export type SQTAction = (scope?: Scope) => void;
 
 export class Scope {
 
@@ -22,19 +33,22 @@ export class Scope {
     public getObject<T extends SQTObject>(name: string) {
         const ref = Scope.sanitize(name);
         const obj = this.objects.get(ref);
-        if (obj) return <T>obj;
-        else return undefined;
+        if (obj) {
+            return <T>obj;
+        }
+        return undefined;
     }
 
     public setAction(name: string, action: SQTAction) {
         this.actions.set(name, action);
     }
 
-    public execAction(name: string) {
-        const obj = this.objects.get(name);
+    public execAction(name: string, scope?: Scope) {
         const act = this.actions.get(name);
         if (act) {
-            act(obj);
+            act(scope ? scope : this);
+        } else {
+            if (this.parent) this.parent.execAction(name, this);
         }
     }
 
