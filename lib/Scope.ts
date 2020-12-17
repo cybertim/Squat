@@ -1,59 +1,50 @@
-export type SQTWatcher = {
+export type Watcher = {
     name: string,
-    callback: (obj?: SQTObject) => void,
-    last?: SQTObject
+    callback: (value?: unknown) => void,
+    last?: unknown
 }
-
-export class SQTObject {
-    uuid?: string;
-    value?: string;
-}
-
-export type SQTAction = (scope?: Scope) => void;
 
 export class Scope {
 
     private static counter = 0;
     public children: Scope[] = [];
-    private watchers: SQTWatcher[] = [];
+    private watchers: Watcher[] = [];
 
-    private actions: Map<string, SQTAction> = new Map();
-    public objects: Map<string, SQTObject> = new Map();
+    public model: Record<string, unknown> = {};
 
     constructor(private id?: number, public parent?: Scope) {
         id = id || 0;
     }
 
-    public setObject<T extends SQTObject>(name: string, object: T) {
+    public exec(name: string, scope?: Scope) {
         const ref = Scope.sanitize(name);
-        if (!object.uuid) object.uuid = Scope.uuidv4();
-        this.objects.set(ref, object);
+        const action = this.model[ref.itemName];
+        if (typeof action === 'function') action(scope ? scope : this);
+        else if (this.parent) this.parent.exec(name, scope ? scope : this);
     }
 
-    public getObject<T extends SQTObject>(name: string) {
+    public get(name: string) {
         const ref = Scope.sanitize(name);
-        const obj = this.objects.get(ref);
-        if (obj) {
-            return <T>obj;
+        if (typeof this.model[ref.itemName] === 'object') {
+            if (ref.memberName) return (<Record<string, unknown>>this.model[ref.itemName])[ref.memberName];
+            else return <object>this.model[ref.itemName];
+        } else if (typeof this.model[ref.itemName] !== 'function') {
+            return <unknown>this.model[ref.itemName];
         }
         return undefined;
     }
 
-    public setAction(name: string, action: SQTAction) {
-        this.actions.set(name, action);
-    }
-
-    public execAction(name: string, scope?: Scope) {
-        const act = this.actions.get(name);
-        if (act) {
-            act(scope ? scope : this);
-        } else {
-            if (this.parent) this.parent.execAction(name, this);
+    public set(name: string, value: unknown) {
+        const ref = Scope.sanitize(name);
+        if (typeof this.model[ref.itemName] === 'object') {
+            if (ref.memberName) (<Record<string, unknown>>this.model[ref.itemName])[ref.memberName] = value;
+            else this.model[ref.itemName] = value;
+        } else if (typeof this.model[ref.itemName] !== 'function') {
+            this.model[ref.itemName] = value;
         }
     }
 
-    public subscribe(watcher: SQTWatcher) {
-        watcher.name = Scope.sanitize(watcher.name);
+    public subscribe(watcher: Watcher) {
         this.watchers.push(watcher);
     }
 
@@ -72,8 +63,9 @@ export class Scope {
     public digest() {
         for (let i = 0; i < this.watchers.length; i++) {
             const watcher = this.watchers[i];
-            const value = this.getObject(watcher.name);
-            if (value && !Scope.equals(value, watcher.last)) {
+            //const value = this.getObject(watcher.name);
+            const value = this.get(watcher.name);
+            if (value && value !== watcher.last) {
                 watcher.last = Scope.clone(value);
                 watcher.callback(value);
             }
@@ -83,46 +75,18 @@ export class Scope {
         }
     }
 
-    private static equals(a: unknown, b: unknown) {
-        return JSON.stringify(a) === JSON.stringify(b);
-    }
-
-    public static get(obj: SQTObject, action: string) {
-        const parts = action.trim().split('.');
-        let itemName = action;
-        let memberName = "";
-        if (parts.length > 0) {
-            itemName = parts[0];
-            memberName = parts[1];
-        }
-        if (memberName && memberName.length > 0) {
-            //const v = Object.getOwnPropertyDescriptor(obj, memberName);
-            //if (v && v.value) return v.value;
-            return (<Record<string, string>>obj)[memberName];
-        } else {
-            return obj.value;
-        }
-    }
-
-    public static set(obj: SQTObject, action: string, val: string) {
-        const parts = action.trim().split('.');
-        let itemName = action;
-        let memberName = "";
-        if (parts.length > 0) {
-            itemName = parts[0];
-            memberName = parts[1];
-        }
-        if (memberName && memberName.length > 0) {
-            (<Record<string, string>>obj)[memberName] = val;
-        } else {
-            obj.value = val;
-        }
-        return obj;
-    }
-
     public static sanitize(action: string) {
         const parts = action.trim().split('.');
-        return parts[0];
+        let itemName = action;
+        let memberName = undefined;
+        if (parts.length > 0) {
+            itemName = parts[0];
+            memberName = parts[1];
+        }
+        return {
+            itemName: itemName,
+            memberName: memberName
+        };
     }
 
     public static uuidv4() {

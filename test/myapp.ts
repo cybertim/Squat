@@ -1,41 +1,41 @@
 import { Compiler } from "../lib/Compiler.ts";
 import { Provider } from "../lib/Provider.ts";
-import { SQTObject } from "../lib/Scope.ts";
+import { Scope } from "../lib/Scope.ts";
 
 Provider.instance().controller("MainCtrl", (scope) => {
 
-    class Todo extends SQTObject {
+    class Todo {
         description = "";
         priority = 0;
     }
 
-    scope.setObject("todo", new Todo());
+    const todo = new Todo();
+    scope.model['todo'] = todo; // add to model
 
-    class Todos extends SQTObject {
+    class Todos {
         list: Todo[] = [];
     }
 
-    scope.setObject("todos", new Todos());
+    const todos = new Todos();
+    scope.model['todos'] = todos;
 
-    scope.setAction("foo()", (obj) => {
+    scope.model['foo()'] = (scope: Scope) => {
         console.log("clicked");
-    });
+    }
 
-    scope.setAction("add()", (obj) => {
-        const todos = scope.getObject<Todos>("todos");
-        const todo = scope.getObject<Todo>("todo");
-        if (todos && todo) {
+    scope.model['add()'] = (scope: Scope) => {
+        if (todo && todos) {
             todos.list.push({
                 description: todo.description,
                 priority: todo.priority
             });
-            scope.setObject("todos", todos);
         }
-    });
+    }
 
-    scope.setAction("delete()", (scope) => {
-        console.log("clicked del", scope?.getObject("todo"));
-    });
+    scope.model['delete()'] = (scope: Scope) => {
+        const todo = <Todo>scope.get('todo'); // local todo from scope (nested repeat)
+        console.log(todos.list.indexOf(todo));
+    }
 
 });
 

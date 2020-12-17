@@ -5,7 +5,7 @@
 /// <reference lib="dom.iterable" />
 /// <reference no-default-lib="true"/>
 
-import { Scope, SQTObject } from "./Scope.ts";
+import { Scope } from "./Scope.ts";
 import { Provider } from "./Provider.ts";
 
 export class Compiler {
@@ -46,7 +46,7 @@ export class Compiler {
         const itemName = parts[0].trim();
         const parentNode = elem.parentNode;
 
-        const render = (obj: SQTObject) => {
+        const render = (obj: unknown) => {
 
           while (parentNode && parentNode.firstChild) {
             parentNode.removeChild(parentNode.firstChild);
@@ -55,14 +55,14 @@ export class Compiler {
           for (let i = 0; i < scopes.length; i++)scopes[i].destroy();
           scopes = [];
 
-          const v = Scope.get(obj, collectionName);
+          const v = obj;//scope.get(collectionName);
           if (Array.isArray(v)) {
             for (const e of v) {
               const currentNode = <Element>elem.cloneNode(true);
               currentNode.removeAttribute('sqt-repeat');
               const s = scope.new();
               scopes.push(s);
-              s.setObject(itemName, e);
+              s.model[itemName] = e;
               if (parentNode) parentNode.appendChild(currentNode);
               Compiler.compile(currentNode, s);
             }
@@ -77,7 +77,7 @@ export class Compiler {
           }
         });
 
-        const obj = scope.getObject(collectionName);
+        const obj = scope.get(collectionName);
         if (obj) render(obj);
       }
     });
@@ -96,12 +96,12 @@ export class Compiler {
         scope.subscribe({
           name: act,
           callback: (obj) => {
-            if (obj) elem.innerHTML = Scope.get(obj, act) || "";
+            if (obj && typeof obj === 'string') elem.innerHTML = obj;
           }
         });
 
-        const obj = scope.getObject(act);
-        if (obj) elem.innerHTML = Scope.get(obj, act) || "";
+        const val = scope.get(act);
+        if (typeof val === 'string') elem.innerHTML = val;
       }
     });
 
@@ -109,7 +109,7 @@ export class Compiler {
       scope: false,
       link: (elem, scope, act) => {
         elem.onclick = () => {
-          scope.execAction(act);
+          scope.exec(act);
           scope.digest();
         };
       }
@@ -121,19 +121,14 @@ export class Compiler {
         if (elem instanceof HTMLInputElement) {
 
           elem.onkeyup = (e) => {
-            let model = scope.getObject(act);
-            if (!model) model = new SQTObject();
-            model = Scope.set(model, act, elem.value);
-            scope.setObject(act, model);
+            scope.set(act, elem.value)
             scope.digest();
           };
 
           scope.subscribe({
             name: act,
             callback: (obj) => {
-              if (obj) {
-                elem.value = Scope.get(obj, act) || "";
-              }
+              if (obj && typeof obj === 'string') elem.value = obj;
             }
           });
         }
