@@ -5,7 +5,10 @@ export type Directive = {
     link: (elem: HTMLElement, scope: Scope, action: string) => void;
 };
 
-export type Controller = (scope: Scope) => void;
+export type Controller = {
+    template: string;
+    controller: (scope: Scope) => void;
+};
 
 export class Provider {
     private static _instance: Provider;
@@ -24,6 +27,10 @@ export class Provider {
         this._controller.set(name, controller);
     }
 
+    public getController(id: string) {
+        return this._controller.get(id);
+    }
+
     public directive(name: string, directive: Directive) {
         this._directives.set(name, directive);
     }
@@ -35,7 +42,8 @@ export class Provider {
     public invoke(name: string) {
         // TODO: maybe map / cache controller per scope
         const controller = this._controller.get(name);
-        if (controller) controller(this._root);
+        // TODO add template to DOM
+        if (controller) controller.controller(this._root.new());
     }
 
     public root() {

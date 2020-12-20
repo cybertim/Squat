@@ -13,9 +13,9 @@ import type {
 } from "https://deno.land/x/denopack/mod.ts";
 
 const config: RollupOptions = {
-    input: "./test/myapp.ts",
+    input: "../target/myapp.ts",
     output: {
-        dir: "test",
+        dir: "../target",
         sourcemap: false
     },
     plugins: [
@@ -31,5 +31,4 @@ const config: RollupOptions = {
         })]
 }
 
-// deno run --unstable --allow-all https://deno.land/x/denopack/cli.ts -c mod.ts
 export default config;

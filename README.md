@@ -10,3 +10,19 @@ bare essential client side web app framework based on Deno / Typescript
 - merge provider into the bootstrap of compiler, pre-define all controllers
 - try to add the first css framework (qg bootstrap water or onsen)
 - try recursive sqt-repeat
+
+controllers: [
+  {
+     name:"",
+     controller: ()=>{
+     }
+  },
+]
+templates: [
+  {
+    name: "bla.html",
+    body: "<html></html>",
+    controller: "name"
+  }
+]
+

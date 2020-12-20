@@ -8,12 +8,16 @@
 import { Scope } from "./Scope.ts";
 import { Provider } from "./Provider.ts";
 
+export function raw(strings: TemplateStringsArray, ...expr: string[]) {
+  return strings.join();
+}
+
 export class Compiler {
 
   private static initialized = false;
 
   public static bootstrap() {
-    if (!Compiler.initialized) Compiler.initialize();
+    if (!Compiler.initialized) Compiler.initialize(document.children[0]);
     this.compile(document.children[0], Provider.instance().root());
   }
 
@@ -35,7 +39,18 @@ export class Compiler {
     }
   }
 
-  private static initialize() {
+  private static initialize(elem: Element) {
+    // const controllers = Provider.instance().controllers();
+    // for (const key of controllers.keys()) {
+    //   elem.innerHTML += '<template id="' + key + '">' + controllers.get(key)?.template + '</template>';
+    // }
+
+    // Provider.instance().directive("sqt-router", {
+    //   scope: false,
+    //   link: (elem, scope, act) => {
+    //   }
+    // });
+
     Provider.instance().directive("sqt-repeat", {
       scope: false,
       link: (elem, scope, act) => {
