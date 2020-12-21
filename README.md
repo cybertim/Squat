@@ -6,23 +6,8 @@ bare essential client side web app framework based on Deno / Typescript
 - ~~move 'get' and 'set' methods in scope to sanatize function (tuple?)~~
 - ~~maybe introduce a 'model' Record ? instead of SQTObject~~
 - ~~improve method names..~~
-- create a special controller that can route (and has a 'deck')
-- merge provider into the bootstrap of compiler, pre-define all controllers
+- ~~create a special controller that can route (and has a 'deck')~~
+- ~~merge provider into the bootstrap of compiler, pre-define all controllers~~
+- introduce services?
 - try to add the first css framework (qg bootstrap water or onsen)
 - try recursive sqt-repeat
-
-controllers: [
-  {
-     name:"",
-     controller: ()=>{
-     }
-  },
-]
-templates: [
-  {
-    name: "bla.html",
-    body: "<html></html>",
-    controller: "name"
-  }
-]
-

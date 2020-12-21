@@ -1,27 +1,30 @@
-import { Compiler } from "./Compiler.ts";
+import { Compiler, Switcher } from "./Compiler.ts";
 import { Directive, Provider } from "./Provider.ts";
-import { Router } from "./Router.ts";
 import { Scope } from "./Scope.ts";
 
-export const Std_directives: Map<string, Directive> = new Map([
+export const std_switcher: Switcher = (element, path, controller) => {
+  if (controller.template) {
+    element.innerHTML = controller.template;
+    controller.initialize(Provider.instance().root());
+    if (!Compiler.busy) {
+      for (let i = 0; i < element.children.length; i++)
+        Compiler.compile(element.children[i], Provider.instance().root());
+    }
+  } else console.error("No template set on controller at path", path);
+};
 
-  ["sqt-router", {
+export const std_directives: Record<string, Directive> = {
+
+  "sqt-router": {
     scope: false,
     link: (elem, scope, act) => {
-      Router.instance().setRoot(elem);
+      Provider.instance().setRouteElement(elem);
       // TODO: use the 'act' for default path to visit?
-      Router.instance().navigate(scope, "/");
+      Provider.instance().navigate(scope, "/");
     }
-  }],
+  },
 
-  ["sqt-controller", {
-    scope: false,
-    link: (elem, scope, act) => {
-      Provider.instance().invoke(act);
-    }
-  }],
-
-  ["sqt-repeat", {
+  "sqt-repeat": {
     scope: false,
     link: (elem, scope, act) => {
       let scopes: Scope[] = [];
@@ -65,9 +68,9 @@ export const Std_directives: Map<string, Directive> = new Map([
       const obj = scope.get(collectionName);
       if (obj) render(obj);
     }
-  }],
+  },
 
-  ["sqt-bind", {
+  "sqt-bind": {
     scope: false,
     link: (elem, scope, act) => {
 
@@ -81,9 +84,9 @@ export const Std_directives: Map<string, Directive> = new Map([
       const val = scope.get(act);
       if (typeof val === 'string') elem.innerHTML = val;
     }
-  }],
+  },
 
-  ["sqt-click", {
+  "sqt-click": {
     scope: false,
     link: (elem, scope, act) => {
       elem.onclick = () => {
@@ -91,9 +94,9 @@ export const Std_directives: Map<string, Directive> = new Map([
         scope.digest();
       };
     }
-  }],
+  },
 
-  ["sqt-model", {
+  "sqt-model": {
     scope: false,
     link: (elem, scope, act) => {
       if (elem instanceof HTMLInputElement) {
@@ -111,6 +114,6 @@ export const Std_directives: Map<string, Directive> = new Map([
         });
       }
     }
-  }]
+  }
 
-]);
+};

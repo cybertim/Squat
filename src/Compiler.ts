@@ -6,26 +6,37 @@
 /// <reference no-default-lib="true"/>
 
 import { Scope } from "./Scope.ts";
-import { Provider } from "./Provider.ts";
+import { Controller, Directive, Provider } from "./Provider.ts";
 
+// export function raw(strings: TemplateStringsArray, ...expr: string[]) {
+//   return strings.join();
+// }
 
-export function raw(strings: TemplateStringsArray, ...expr: string[]) {
-  return strings.join();
+export type Switcher = (element: Element, path: string, controller: Controller) => void;
+
+export interface CompilerOptions {
+  controllers: Controller[];
+  routes: Record<string, string>;
+  directives: Record<string, Directive>;
+  switcher: Switcher;
 }
 
 export class Compiler {
 
   public static busy = false;
 
-  public static bootstrap() {
-    //if (!Compiler.initialized) Compiler.initialize();
+  public static bootstrap(options: CompilerOptions) {
+    Provider.instance().setDirectives(options.directives);
+    Provider.instance().setControllers(options.controllers);
+    Provider.instance().setRoutes(options.routes);
+    Provider.instance().setRouteSwitcher(options.switcher);
     this.compile(document.children[0], Provider.instance().root());
   }
 
   private static callDirectives(elem: Element, scope: Scope) {
     for (let i = 0; i < elem.attributes.length; i++) {
       const attr = elem.attributes[i];
-      const directive = Provider.instance().get(attr.name);
+      const directive = Provider.instance().getDirectives(attr.name);
       if (directive) {
         if (elem instanceof HTMLElement) directive.link(elem, scope, attr.value);
       }

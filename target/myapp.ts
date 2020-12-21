@@ -1,12 +1,11 @@
-import { Compiler, raw } from "../src/Compiler.ts";
-import { Provider } from "../src/Provider.ts";
+import { Compiler } from "../src/Compiler.ts";
+import { Controller, Provider } from "../src/Provider.ts";
 import { Scope } from "../src/Scope.ts";
+import { std_directives, std_switcher } from "../src/Std.ts";
 import ons from "../lib/onsenui.d.ts";
-import { Router } from "../src/Router.ts";
-import { Std_directives } from "../src/Std_directives.ts";
 
-Provider.instance().controller("MainCtrl", {
-    template: `
+class MainCtrl extends Controller {
+    template = `
     <section>
         <span sqt-bind="bar"></span>
         <input sqt-model="bar" type="text">
@@ -28,8 +27,9 @@ Provider.instance().controller("MainCtrl", {
             </tr>
         </table>
     </section>
-    `,
-    controller: (scope) => {
+    `
+
+    initialize(scope: Scope) {
 
         class Todo {
             description = "";
@@ -48,7 +48,7 @@ Provider.instance().controller("MainCtrl", {
 
         scope.model['foo()'] = (scope: Scope) => {
             //ons.notification.alert("asd");
-            Router.instance().navigate(scope, "/second");
+            Provider.instance().navigate(scope, "/second");
         }
 
         scope.model['add()'] = (scope: Scope) => {
@@ -66,26 +66,36 @@ Provider.instance().controller("MainCtrl", {
         }
 
     }
-});
+};
 
-Provider.instance().controller("SecondCtrl", {
-    template:
-        `
+class SecondCtrl implements Controller {
+    template = `
     <input sqt-model="bar" type="text">
     <ons-button sqt-click="bar()">TEst</ons-button>
-    <span sqt-bind="bar"></span>
-    `,
-    controller: (scope) => {
-        const abc = "bla";
-        scope.model["bar"] = abc;
+    <span sqt-bind="bar"></span>`
 
-        scope.model["bar()"] = (scope: Scope) => {
-            console.log("bar is", abc);
-        }
+    public abc = "bla";
+
+    initialize(scope: Scope) {
+        scope.model["bar"] = this.abc;
+        scope.model["bar()"] = this.bar;
     }
-});
 
-Router.instance().route("/", "MainCtrl");
-Router.instance().route("/second", "SecondCtrl");
-Provider.instance().directives(Std_directives);
-Compiler.bootstrap();
+    bar(scope: Scope) {
+        const z = scope.model['bar'];
+        console.log("bar is", this.abc);
+    }
+};
+
+Compiler.bootstrap({
+    controllers: [
+        new MainCtrl(),
+        new SecondCtrl()
+    ],
+    routes: {
+        "/": MainCtrl.name,
+        "/second": SecondCtrl.name
+    },
+    directives: std_directives,
+    switcher: std_switcher
+});
