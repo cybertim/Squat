@@ -1,3 +1,4 @@
+import { Compiler } from "./Compiler.ts";
 import { Controller, Provider } from "./Provider.ts";
 import { Scope } from "./Scope.ts";
 
@@ -17,6 +18,10 @@ export class Router {
         return Router._instance;
     }
 
+    constructor() {
+        this._switcher = this.defaultSwitcher();
+    }
+
     setRoot(elem: Element) {
         this._root = elem;
     }
@@ -28,7 +33,11 @@ export class Router {
     private defaultSwitcher(): RouteSwitcher {
         return (element, path, controller) => {
             element.innerHTML = controller.template;
-            controller.controller(Provider.instance().root().new());
+            controller.controller(Provider.instance().root());
+            if (!Compiler.busy) {
+                for (let i = 0; i < element.children.length; i++)
+                    Compiler.compile(element.children[i], Provider.instance().root());
+            }
         }
     }
 
@@ -37,12 +46,11 @@ export class Router {
     }
 
     navigate(scope: Scope, path: string) {
-        if (!this._switcher) this._switcher = defaultSwitcher();
         const controllerId = this._routes.get(path);
         if (controllerId) {
             const controller = Provider.instance().getController(controllerId);
             if (controller && this._root) {
-                scope.destroy();
+                //scope.destroy();
                 this._switcher(this._root, path, controller);
             }
             else console.error("Router root element not set and/or controller '" + controllerId + "' was not declared or set.");

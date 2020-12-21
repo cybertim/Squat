@@ -35,6 +35,10 @@ export class Provider {
         this._directives.set(name, directive);
     }
 
+    public directives(map: Map<string, Directive>) {
+        this._directives = map;
+    }
+
     public get(name: string) {
         return this._directives.get(name);
     }
@@ -43,7 +47,7 @@ export class Provider {
         // TODO: maybe map / cache controller per scope
         const controller = this._controller.get(name);
         // TODO add template to DOM
-        if (controller) controller.controller(this._root.new());
+        if (controller) controller.controller(this._root);
     }
 
     public root() {

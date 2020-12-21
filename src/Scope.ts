@@ -9,7 +9,6 @@ export class Scope {
     private static counter = 0;
     public children: Scope[] = [];
     private watchers: Watcher[] = [];
-
     public model: Record<string, unknown> = {};
 
     constructor(private id?: number, public parent?: Scope) {

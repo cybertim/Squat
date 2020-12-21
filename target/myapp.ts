@@ -2,9 +2,11 @@ import { Compiler, raw } from "../src/Compiler.ts";
 import { Provider } from "../src/Provider.ts";
 import { Scope } from "../src/Scope.ts";
 import ons from "../lib/onsenui.d.ts";
+import { Router } from "../src/Router.ts";
+import { Std_directives } from "../src/Std_directives.ts";
 
 Provider.instance().controller("MainCtrl", {
-    template: raw`
+    template: `
     <section>
         <span sqt-bind="bar"></span>
         <input sqt-model="bar" type="text">
@@ -45,7 +47,8 @@ Provider.instance().controller("MainCtrl", {
         scope.model['todos'] = todos;
 
         scope.model['foo()'] = (scope: Scope) => {
-            ons.notification.alert("asd");
+            //ons.notification.alert("asd");
+            Router.instance().navigate(scope, "/second");
         }
 
         scope.model['add()'] = (scope: Scope) => {
@@ -65,4 +68,24 @@ Provider.instance().controller("MainCtrl", {
     }
 });
 
+Provider.instance().controller("SecondCtrl", {
+    template:
+        `
+    <input sqt-model="bar" type="text">
+    <ons-button sqt-click="bar()">TEst</ons-button>
+    <span sqt-bind="bar"></span>
+    `,
+    controller: (scope) => {
+        const abc = "bla";
+        scope.model["bar"] = abc;
+
+        scope.model["bar()"] = (scope: Scope) => {
+            console.log("bar is", abc);
+        }
+    }
+});
+
+Router.instance().route("/", "MainCtrl");
+Router.instance().route("/second", "SecondCtrl");
+Provider.instance().directives(Std_directives);
 Compiler.bootstrap();
