@@ -87,15 +87,77 @@ class SecondCtrl implements Controller {
     }
 };
 
+
+class OnsenPage1 extends Controller {
+    template = `
+    <ons-page id="page1">
+    <ons-toolbar>
+      <div class="center">Page 1</div>
+    </ons-toolbar>
+
+    <p>This is the first page.</p>
+
+    <ons-button id="push-button" sqt-click="go()">Push page</ons-button>
+  </ons-page>
+    `
+    initialize(scope: Scope) {
+        scope.model['go()'] = (scope: Scope) => {
+            Provider.instance().navigate(scope, "/page2");
+        }
+    }
+
+}
+
+class OnsenPage2 extends Controller {
+    template = `
+    <ons-page id="page2">
+    <ons-toolbar>
+      <div class="left"><ons-back-button>Page 1</ons-back-button></div>
+      <div class="center"></div>
+    </ons-toolbar>
+
+    <p>This is the second page.</p>
+  </ons-page>
+    `
+    initialize(scope: Scope) { }
+
+}
+
 Compiler.bootstrap({
     controllers: [
-        new MainCtrl(),
-        new SecondCtrl()
+        new OnsenPage1(),
+        new OnsenPage2()
     ],
     routes: {
-        "/": MainCtrl.name,
-        "/second": SecondCtrl.name
+        "/": OnsenPage1.name,
+        "/page2": OnsenPage2.name
     },
     directives: std_directives,
-    switcher: std_switcher
+    switcher: (element, path, controller) => {
+        if (controller.template) {
+            const loader = (options: { page: Element, parent: Element }, done: (elem: Element | null | undefined) => void) => {
+                var wrapper = document.createElement('div');
+                wrapper.innerHTML = "" + controller.template;
+                options.page = wrapper.children[0];
+                options.parent.appendChild(options.page);
+                done(options.page);
+            };
+
+            const unloader = (page: Element) => {
+                page.remove();
+            }
+
+            (<ons.OnsNavigatorElement>element).pageLoader = new ons.PageLoader(loader, unloader);
+
+            (<ons.OnsNavigatorElement>element).pushPage(controller.constructor.name, {
+                callback: () => {
+                    controller.initialize(Provider.instance().root());
+                    if (!Compiler.busy) {
+                        for (let i = 0; i < element.children.length; i++)
+                            Compiler.compile(element.children[i], Provider.instance().root());
+                    }
+                }
+            });
+        }
+    }
 });
