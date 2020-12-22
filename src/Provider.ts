@@ -6,18 +6,26 @@ export type Directive = {
     link: (elem: HTMLElement, scope: Scope, action: string) => void;
 };
 
-export class Controller {
-    public template: string | undefined;
-    initialize(scope: Scope) { }
-};
+export abstract class Controller {
+    protected initialized = false;
+    abstract template: string | undefined;
+    abstract initialize(scope: Scope): void;
+    doInitialization(scope: Scope) {
+        if (!this.initialized) {
+            this.initialize(scope);
+            this.initialized = true;
+        }
+    }
+}
 
 export class Provider {
+
     private static _instance: Provider;
     private _directives: Record<string, Directive> = {};
     private _controller: Record<string, Controller> = {};
     private _routes: Record<string, string> = {};
-    private _root = new Scope();
-    private _route: Element;
+    private _scopes: Record<string, Scope> = { root: new Scope() };
+    private _route: Element | undefined;
     private _switcher: Switcher | undefined;
 
     public static instance() {
@@ -66,6 +74,9 @@ export class Provider {
         return this._directives[name.toLowerCase()];
     }
 
+    // goTo(scope, route, data?)
+    // goBack(scope, data?)
+
     public navigate(scope: Scope, path: string) {
         const id = this._routes[path];
         if (id) {
@@ -79,8 +90,16 @@ export class Provider {
         }
     }
 
-    public root() {
-        return this._root;
+    public getScope(name?: string) {
+        const root = this._scopes['root'];
+        if (name) {
+            let scope = this._scopes[name];
+            if (!scope) {
+                scope = root.new();
+                this._scopes[name] = scope;
+            }
+            return scope;
+        } else return root;
     }
 
 }

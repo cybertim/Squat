@@ -2,18 +2,49 @@ import { Compiler, Switcher } from "./Compiler.ts";
 import { Directive, Provider } from "./Provider.ts";
 import { Scope } from "./Scope.ts";
 
-export const std_switcher: Switcher = (element, path, controller) => {
+export const stdOnsenSwitcher: Switcher = (element, path, controller) => {
+  if (controller.template) {
+    const loader = (options: { page: Element, parent: Element }, done: (elem: Element | null | undefined) => void) => {
+      var wrapper = document.createElement('div');
+      wrapper.innerHTML = "" + controller.template;
+      options.page = wrapper.children[0];
+      options.parent.appendChild(options.page);
+      done(options.page);
+    };
+
+    const unloader = (page: Element) => {
+      page.remove();
+    }
+
+    (<ons.OnsNavigatorElement>element).pageLoader = new ons.PageLoader(loader, unloader);
+
+    (<ons.OnsNavigatorElement>element).pushPage(controller.constructor.name, {
+      callback: () => {
+        const _scope = Provider.instance().getScope(path);
+        controller.doInitialization(_scope);
+        if (!Compiler.busy) {
+          for (let i = 0; i < element.children.length; i++)
+            Compiler.compile(element.children[i], _scope);
+        }
+      }
+    });
+  }
+}
+
+export const stdSwitcher: Switcher = (element, path, controller) => {
   if (controller.template) {
     element.innerHTML = controller.template;
-    controller.initialize(Provider.instance().root());
+    const _scope = Provider.instance().getScope(path);
+    controller.doInitialization(_scope);
     if (!Compiler.busy) {
       for (let i = 0; i < element.children.length; i++)
-        Compiler.compile(element.children[i], Provider.instance().root());
-    }
+        Compiler.compile(element.children[i], _scope);
+      _scope.digest();
+    } else console.error("Compiler was still busy...");
   } else console.error("No template set on controller at path", path);
 };
 
-export const std_directives: Record<string, Directive> = {
+export const stdDirectives: Record<string, Directive> = {
 
   "sqt-router": {
     scope: false,

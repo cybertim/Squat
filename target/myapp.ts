@@ -1,7 +1,7 @@
 import { Compiler } from "../src/Compiler.ts";
 import { Controller, Provider } from "../src/Provider.ts";
 import { Scope } from "../src/Scope.ts";
-import { std_directives, std_switcher } from "../src/Std.ts";
+import { stdDirectives, stdSwitcher } from "../src/Std.ts";
 import ons from "../lib/onsenui.d.ts";
 
 class MainCtrl extends Controller {
@@ -48,7 +48,7 @@ class MainCtrl extends Controller {
 
         scope.model['foo()'] = (scope: Scope) => {
             //ons.notification.alert("asd");
-            Provider.instance().navigate(scope, "/second");
+            Provider.instance().navigate(scope, "/page2");
         }
 
         scope.model['add()'] = (scope: Scope) => {
@@ -66,27 +66,24 @@ class MainCtrl extends Controller {
         }
 
     }
-};
+}
 
-class SecondCtrl implements Controller {
+class SecondCtrl extends Controller {
     template = `
     <input sqt-model="bar" type="text">
     <ons-button sqt-click="bar()">TEst</ons-button>
     <span sqt-bind="bar"></span>`
 
-    public abc = "bla";
-
     initialize(scope: Scope) {
-        scope.model["bar"] = this.abc;
+        scope.model["bar"] = "this.abc";
         scope.model["bar()"] = this.bar;
     }
 
     bar(scope: Scope) {
-        const z = scope.model['bar'];
-        console.log("bar is", this.abc);
+        Provider.instance().navigate(scope, "/");
+        //console.log("bar is", this.abc);
     }
-};
-
+}
 
 class OnsenPage1 extends Controller {
     template = `
@@ -125,39 +122,13 @@ class OnsenPage2 extends Controller {
 
 Compiler.bootstrap({
     controllers: [
-        new OnsenPage1(),
-        new OnsenPage2()
+        new MainCtrl(),
+        new SecondCtrl()
     ],
     routes: {
-        "/": OnsenPage1.name,
-        "/page2": OnsenPage2.name
+        "/": MainCtrl.name,
+        "/page2": SecondCtrl.name
     },
-    directives: std_directives,
-    switcher: (element, path, controller) => {
-        if (controller.template) {
-            const loader = (options: { page: Element, parent: Element }, done: (elem: Element | null | undefined) => void) => {
-                var wrapper = document.createElement('div');
-                wrapper.innerHTML = "" + controller.template;
-                options.page = wrapper.children[0];
-                options.parent.appendChild(options.page);
-                done(options.page);
-            };
-
-            const unloader = (page: Element) => {
-                page.remove();
-            }
-
-            (<ons.OnsNavigatorElement>element).pageLoader = new ons.PageLoader(loader, unloader);
-
-            (<ons.OnsNavigatorElement>element).pushPage(controller.constructor.name, {
-                callback: () => {
-                    controller.initialize(Provider.instance().root());
-                    if (!Compiler.busy) {
-                        for (let i = 0; i < element.children.length; i++)
-                            Compiler.compile(element.children[i], Provider.instance().root());
-                    }
-                }
-            });
-        }
-    }
+    directives: stdDirectives,
+    switcher: stdSwitcher
 });

@@ -26,7 +26,7 @@ export class Scope {
         const ref = Scope.sanitize(name);
         if (typeof this.model[ref.itemName] === 'object') {
             if (ref.memberName) return (<Record<string, unknown>>this.model[ref.itemName])[ref.memberName];
-            else return <object>this.model[ref.itemName];
+            else return this.model[ref.itemName];
         } else if (typeof this.model[ref.itemName] !== 'function') {
             return <unknown>this.model[ref.itemName];
         }
