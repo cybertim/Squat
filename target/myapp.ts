@@ -1,7 +1,7 @@
 import { Compiler } from "../src/Compiler.ts";
 import { Controller, Provider } from "../src/Provider.ts";
 import { Scope } from "../src/Scope.ts";
-import { stdDirectives, stdSwitcher } from "../src/Std.ts";
+import { OnsenUISwitcher, stdDirectives } from "../src/Std.ts";
 import ons from "../lib/onsenui.d.ts";
 
 class MainCtrl extends Controller {
@@ -48,7 +48,7 @@ class MainCtrl extends Controller {
 
         scope.model['foo()'] = (scope: Scope) => {
             //ons.notification.alert("asd");
-            Provider.instance().navigate(scope, "/page2");
+            Provider.instance().pushPage(scope, "/page2");
         }
 
         scope.model['add()'] = (scope: Scope) => {
@@ -80,7 +80,7 @@ class SecondCtrl extends Controller {
     }
 
     bar(scope: Scope) {
-        Provider.instance().navigate(scope, "/");
+        Provider.instance().popPage(scope);
         //console.log("bar is", this.abc);
     }
 }
@@ -99,7 +99,7 @@ class OnsenPage1 extends Controller {
     `
     initialize(scope: Scope) {
         scope.model['go()'] = (scope: Scope) => {
-            Provider.instance().navigate(scope, "/page2");
+            Provider.instance().pushPage(scope, "/page2");
         }
     }
 
@@ -109,26 +109,34 @@ class OnsenPage2 extends Controller {
     template = `
     <ons-page id="page2">
     <ons-toolbar>
-      <div class="left"><ons-back-button>Page 1</ons-back-button></div>
+      <div class="left">
+      <ons-toolbar-button sqt-click="terug()">
+       back
+      </ons-toolbar-button>
+      </div>
       <div class="center"></div>
     </ons-toolbar>
 
     <p>This is the second page.</p>
   </ons-page>
     `
-    initialize(scope: Scope) { }
+    initialize(scope: Scope) {
+        scope.model['terug()'] = (scope: Scope) => {
+            Provider.instance().popPage(scope);
+        }
+    }
 
 }
 
 Compiler.bootstrap({
     controllers: [
-        new MainCtrl(),
-        new SecondCtrl()
+        new OnsenPage1(),
+        new OnsenPage2()
     ],
     routes: {
-        "/": MainCtrl.name,
-        "/page2": SecondCtrl.name
+        "/": OnsenPage1.name,
+        "/page2": OnsenPage2.name
     },
     directives: stdDirectives,
-    switcher: stdSwitcher
+    switcher: new OnsenUISwitcher()
 });

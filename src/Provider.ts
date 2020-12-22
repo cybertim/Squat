@@ -27,6 +27,7 @@ export class Provider {
     private _scopes: Record<string, Scope> = { root: new Scope() };
     private _route: Element | undefined;
     private _switcher: Switcher | undefined;
+    private _pageStack: Array<string> = [];
 
     public static instance() {
         if (!Provider._instance) {
@@ -74,19 +75,29 @@ export class Provider {
         return this._directives[name.toLowerCase()];
     }
 
-    // goTo(scope, route, data?)
-    // goBack(scope, data?)
-
-    public navigate(scope: Scope, path: string) {
+    public pushPage(scope: Scope, path: string) {
         const id = this._routes[path];
         if (id) {
             const controller = this.getController(id);
             if (controller && this._route && this._switcher) {
                 //scope.destroy();
                 // TODO: fix scope for routes / controllers
-                this._switcher(this._route, path, controller);
+                this._pageStack.unshift(path);
+                this._switcher.pushPage(this._route, path, controller);
             }
-            else console.error("Router root element not set and/or controller '" + id + "' was not declared or set.");
+            else console.error("no route or controller '" + id + "' not declared.");
+        }
+    }
+
+    public popPage(scope: Scope) {
+        if (this._pageStack.length < 1) return;
+        this._pageStack.shift();
+        const path = this._pageStack[0];
+        if (path) {
+            const id = this._routes[path];
+            const controller = this.getController(id);
+            if (controller && this._route && this._switcher)
+                this._switcher.popPage(this._route, path, controller);
         }
     }
 
