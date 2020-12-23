@@ -1,31 +1,14 @@
-import { Switcher } from "./Compiler.ts";
+import { Controller, Directive, Route, Switcher } from "./Interfaces.ts";
 import { Scope } from "./Scope.ts";
-
-export type Directive = {
-    scope: boolean;
-    link: (elem: HTMLElement, scope: Scope, action: string) => void;
-};
-
-export abstract class Controller {
-    protected initialized = false;
-    abstract template: string | undefined;
-    abstract initialize(scope: Scope): void;
-    doInitialization(scope: Scope) {
-        if (!this.initialized) {
-            this.initialize(scope);
-            this.initialized = true;
-        }
-    }
-}
 
 export class Provider {
 
     private static _instance: Provider;
-    private _directives: Record<string, Directive> = {};
+    private _directives: Map<string, Directive> = new Map();
     private _controller: Record<string, Controller> = {};
-    private _routes: Record<string, string> = {};
+    private _routes: Map<string, string> = new Map();
     private _scopes: Record<string, Scope> = { root: new Scope() };
-    private _route: Element | undefined;
+    private _router: Element | undefined;
     private _switcher: Switcher | undefined;
     private _pageStack: Array<string> = [];
 
@@ -36,23 +19,22 @@ export class Provider {
         return Provider._instance;
     }
 
-    setRouteElement(element: Element) {
-        this._route = element;
+    setRouterElement(element: Element) {
+        this._router = element;
     }
 
     setRouteSwitcher(switcher: Switcher) {
         this._switcher = switcher;
     }
 
-    setRoutes(routes: Record<string, string>) {
-        for (const route in routes) {
-            console.debug("adding route", routes[route].toLowerCase());
-            this._routes[route] = routes[route].toLowerCase();
+    setRoutes(routes: Route[]) {
+        for (const route of routes) {
+            this._routes.set(route.path, route.controllerName.toLowerCase());
         }
     }
 
     getControllerByRoute(name: string) {
-        const id = this._routes[name.toLowerCase()];
+        const id = this._routes.get(name.toLowerCase());
         if (id) return this.getController(id);
     }
 
@@ -67,26 +49,23 @@ export class Provider {
         return this._controller[id.toLowerCase()];
     }
 
-    public setDirectives(directives: Record<string, Directive>) {
-        this._directives = directives;
+    public setDirectives(directives: Directive[]) {
+        for (const directive of directives) {
+            this._directives.set(directive.name, directive);
+        }
     }
 
     public getDirectives(name: string) {
-        return this._directives[name.toLowerCase()];
+        return this._directives.get(name.toLowerCase());
     }
 
     public pushPage(scope: Scope, path: string) {
-        const id = this._routes[path];
-        if (id) {
-            const controller = this.getController(id);
-            if (controller && this._route && this._switcher) {
-                //scope.destroy();
-                // TODO: fix scope for routes / controllers
-                this._pageStack.unshift(path);
-                this._switcher.pushPage(this._route, path, controller);
-            }
-            else console.error("no route or controller '" + id + "' not declared.");
+        const controller = this.getControllerByRoute(path);
+        if (controller && this._router && this._switcher) {
+            this._pageStack.unshift(path);
+            this._switcher.pushPage(this._router, path, controller);
         }
+        else console.error("no route or controller for path '" + path + "'.");
     }
 
     public popPage(scope: Scope) {
@@ -94,10 +73,9 @@ export class Provider {
         this._pageStack.shift();
         const path = this._pageStack[0];
         if (path) {
-            const id = this._routes[path];
-            const controller = this.getController(id);
-            if (controller && this._route && this._switcher)
-                this._switcher.popPage(this._route, path, controller);
+            const controller = this.getControllerByRoute(path);
+            if (controller && this._router && this._switcher)
+                this._switcher.popPage(this._router, path, controller);
         }
     }
 

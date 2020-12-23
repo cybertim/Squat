@@ -1,8 +1,13 @@
-import { Compiler } from "../src/Compiler.ts";
-import { Controller, Provider } from "../src/Provider.ts";
+import { Squat } from "../src/Squat.ts";
+import { Provider } from "../src/Provider.ts";
 import { Scope } from "../src/Scope.ts";
-import { OnsenUISwitcher, stdDirectives } from "../src/Std.ts";
-import ons from "../lib/onsenui.d.ts";
+import { Controller } from "../src/Interfaces.ts";
+import { OnsenUISwitcher } from "../src/xtr/OnsenUISwitcher.ts";
+import { SqtBind } from "../src/std/SqtBind.ts";
+import { SqtRepeat } from "../src/std/SqtRepeat.ts";
+import { SqtClick } from "../src/std/SqtClick.ts";
+import { SqtModel } from "../src/std/SqtModel.ts";
+import { SqtRouter } from "../src/std/SqtRouter.ts";
 
 class MainCtrl extends Controller {
     template = `
@@ -128,15 +133,15 @@ class OnsenPage2 extends Controller {
 
 }
 
-Compiler.bootstrap({
+Squat.bootstrap({
     controllers: [
         new OnsenPage1(),
         new OnsenPage2()
     ],
-    routes: {
-        "/": OnsenPage1.name,
-        "/page2": OnsenPage2.name
-    },
-    directives: stdDirectives,
+    routes: [
+        { path: "/", controllerName: OnsenPage1.name },
+        { path: "/page2", controllerName: OnsenPage2.name }
+    ],
+    directives: [SqtBind, SqtRepeat, SqtClick, SqtModel, SqtRouter],
     switcher: new OnsenUISwitcher()
 });
