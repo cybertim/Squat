@@ -56,7 +56,7 @@ export class Squat {
     }
 
     public static finish(element: Element, path: string, controller: Controller) {
-        const _sqope = Provider.instance().getSqope(path);
+        const _sqope = Provider.instance().getSqope(path, controller);
         console.debug(path, _sqope);
         controller.doInitialization(_sqope);
         if (!Squat.busy) {

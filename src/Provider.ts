@@ -79,13 +79,16 @@ export class Provider {
         }
     }
 
-    public getSqope(name?: string) {
+    public getSqope(name?: string, controller?: Controller) {
         let root = this._scopes.get('root');
-        if (!root) root = new Sqope();
+        if (!root) {
+            root = new Sqope();
+            this._scopes.set('root', root);
+        }
         if (name) {
             let sqope = this._scopes.get(name);
             if (!sqope) {
-                sqope = root.new();
+                sqope = root.new(controller);
                 this._scopes.set(name, sqope);
             }
             return sqope;

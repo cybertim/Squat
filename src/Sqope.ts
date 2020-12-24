@@ -2,15 +2,13 @@ import { Controller, Watcher } from "./Interfaces.ts";
 
 export class Sqope {
 
-    private static counter = 0;
     private watchers: Watcher[] = [];
-    private children: Sqope[] = [];
+    public children: Sqope[] = [];
 
-    constructor(private id?: number, public parent?: Sqope, private controller?: Controller) { }
+    constructor(public parent?: Sqope, public controller?: Controller | Record<string, unknown>) { }
 
-    public new(controller?: Controller) {
-        Sqope.counter++;
-        const obj = new Sqope(Sqope.counter, this, controller);
+    public new(controller?: Controller | Record<string, unknown>) {
+        const obj = new Sqope(this, controller);
         this.children.push(obj);
         return obj;
     }
@@ -38,12 +36,26 @@ export class Sqope {
         }
     }
 
-    public exec(name: string) {
-        if (this.controller) {
-            Sqope.exec(name, this.controller);
-            return true;
+    public exec(name: string, sqope?: Sqope, obj?: unknown) {
+        const items = name.split('.');
+        const item = items[0];
+        const names = Object.getOwnPropertyNames(obj ? obj : this.controller);
+        if (names.includes(item)) {
+            const values = Object.getOwnPropertyDescriptors(obj ? obj : this.controller);
+            const value = values[item].value;
+            switch (typeof value) {
+                case 'object':
+                    items.shift();
+                    this.exec(items.join('.'), sqope, (<Record<string, unknown>>(obj ? obj : this.controller))[item]);
+                    return;
+                case 'function':
+                    value(sqope ? sqope : this);
+                    return;
+                default:
+                    break;
+            }
         }
-        return false;
+        if (this.parent) this.parent.exec(name, sqope ? sqope : this);
     }
 
     public set(name: string, value: string) {
@@ -76,16 +88,22 @@ export class Sqope {
         }
     }
 
-    public static get(name: string, obj: unknown): undefined | string | boolean | number | bigint {
+    public static get(name: string, obj: unknown): undefined | string | boolean | number | bigint | Array<unknown> {
         const items = name.split('.');
         const item = items[0];
         const names = Object.getOwnPropertyNames(obj);
         if (names.includes(item)) {
             const values = Object.getOwnPropertyDescriptors(obj);
-            switch (typeof values[item].value) {
+            const value = values[item].value;
+            switch (typeof value) {
                 case 'object':
-                    items.shift();
-                    return Sqope.get(items.join('.'), (<Record<string, unknown>>obj)[item]);
+                    if (!Array.isArray(value)) {
+                        // When the item is not an array, all types are covered and this must be a (sub)class 
+                        // so we go recursive into it...
+                        items.shift();
+                        return Sqope.get(items.join('.'), (<Record<string, unknown>>obj)[item]);
+                    }
+                    return (<Record<string, Array<unknown>>>obj)[item];
                 case 'string':
                 case 'boolean':
                 case 'number':
@@ -94,28 +112,6 @@ export class Sqope {
                 case 'function':
                 default:
                     return undefined;
-            }
-        }
-        return undefined;
-    }
-
-    public static exec(name: string, parent: unknown, obj?: unknown) {
-        const items = name.split('.');
-        const item = items[0];
-        const names = Object.getOwnPropertyNames(obj ? obj : parent);
-        if (names.includes(item)) {
-            const values = Object.getOwnPropertyDescriptors(obj ? obj : parent);
-            const value = values[item].value;
-            switch (typeof value) {
-                case 'object':
-                    items.shift();
-                    Sqope.exec(items.join('.'), parent, (<Record<string, unknown>>(obj ? obj : parent))[item]);
-                    break;
-                case 'function':
-                    value(parent);
-                    break;
-                default:
-                    break;
             }
         }
         return undefined;

@@ -27,9 +27,12 @@ export const SqtRepeat: Directive = {
                 for (const e of v) {
                     const currentNode = <Element>elem.cloneNode(true);
                     currentNode.removeAttribute('sqt-repeat');
-                    const s = sqope.new(e);
+                    const obj: Record<string, unknown> = {};
+                    obj[itemName] = e;
+                    const s = sqope.new(obj);
                     sqopes.push(s);
                     // TODO: decorate 'e' as a controller - add the methods - is it needed??
+                    console.log(e);
                     //s.model[itemName] = e;                    
                     if (parentNode) parentNode.appendChild(currentNode);
                     Squat.compile(currentNode, s);
