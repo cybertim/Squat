@@ -1,8 +1,8 @@
 /// <reference path="../lib/dom.d.ts" />
 
-import { Scope } from "./Scope.ts";
 import { Provider } from "./Provider.ts";
 import { CompilerHalt, Controller, Directive, Route, Switcher } from "./Interfaces.ts";
+import { Sqope } from "./Sqope.ts";
 
 // export function raw(strings: TemplateStringsArray, ...expr: string[]) {
 //   return strings.join();
@@ -26,10 +26,10 @@ export class Squat {
         Provider.instance().setRouteSwitcher(options.switcher);
         // TODO: maybe add option to also not use the router and skip the sqt-router tag?
         // deno-lint-ignore no-undef
-        this.compile(document.children[0], Provider.instance().getScope(), (n, d) => { console.log('yes'); return n === 'sqt-router' });
+        this.compile(document.children[0], Provider.instance().getSqope(), (n, d) => { return n === 'sqt-router' });
     }
 
-    private static callDirectives(elem: Element, scope: Scope, stop?: CompilerHalt) {
+    private static callDirectives(elem: Element, sqope: Sqope, stop?: CompilerHalt) {
         for (let i = 0; i < elem.attributes.length; i++) {
             const attr = elem.attributes[i];
             const directive = Provider.instance().getDirectives(attr.name);
@@ -37,32 +37,32 @@ export class Squat {
                 const halt = stop && stop(attr.name, directive);
                 this.busy = !halt;
                 // deno-lint-ignore no-undef
-                if (elem instanceof HTMLElement) directive.link(elem, scope, attr.value);
+                if (elem instanceof HTMLElement) directive.link(elem, sqope, attr.value);
                 if (halt) return false;
             }
         }
         return true;
     }
 
-    public static compile(elem: Element, scope: Scope, stop?: CompilerHalt) {
+    public static compile(elem: Element, sqope: Sqope, stop?: CompilerHalt) {
         this.busy = true;
-        if (this.callDirectives(elem, scope, stop)) {
+        if (this.callDirectives(elem, sqope, stop)) {
             for (let i = 0; i < elem.children.length; i++) {
                 const child = elem.children.item(i);
-                if (child !== null) this.compile(child, scope, stop);
+                if (child !== null) this.compile(child, sqope, stop);
             }
         }
         this.busy = false;
     }
 
     public static finish(element: Element, path: string, controller: Controller) {
-        const _scope = Provider.instance().getScope(path);
-        console.debug(path, _scope);
-        controller.doInitialization(_scope);
+        const _sqope = Provider.instance().getSqope(path);
+        console.debug(path, _sqope);
+        controller.doInitialization(_sqope);
         if (!Squat.busy) {
             for (let i = 0; i < element.children.length; i++)
-                Squat.compile(element.children[i], _scope);
-            _scope.digest();
+                Squat.compile(element.children[i], _sqope);
+            _sqope.digest();
         } else console.error("compiler is busy.");
     }
 

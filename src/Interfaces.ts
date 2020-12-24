@@ -1,6 +1,6 @@
 /// <reference path="../lib/dom.d.ts" />
+import { Sqope } from "./Sqope.ts";
 
-import { Scope } from "./Scope.ts";
 
 export abstract class Switcher {
     protected initialized = false;
@@ -31,17 +31,23 @@ export type Route = {
 export type Directive = {
     name: string;
     scope: boolean;
-    link: (elem: HTMLElement, scope: Scope, action: string) => void;
+    link: (elem: HTMLElement, sqope: Sqope, action: string) => void;
 }
 
 export abstract class Controller {
     protected initialized = false;
     abstract template: string | undefined;
-    abstract initialize(scope: Scope): void;
-    doInitialization(scope: Scope) {
+    abstract initialize(sqope: Sqope): void;
+    doInitialization(sqope: Sqope) {
         if (!this.initialized) {
-            this.initialize(scope);
+            this.initialize(sqope);
             this.initialized = true;
         }
     }
+}
+
+export type Watcher = {
+    name: string,
+    callback: (value?: unknown) => void,
+    last?: unknown
 }

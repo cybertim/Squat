@@ -1,8 +1,4 @@
-export type Watcher = {
-    name: string,
-    callback: (value?: unknown) => void,
-    last?: unknown
-}
+import { Watcher } from "./Interfaces.ts";
 
 export class Scope {
 
