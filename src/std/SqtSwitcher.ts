@@ -15,8 +15,9 @@ export class SqtSwitcher extends Switcher {
     }
 
     goTo(element: Element, path: string, controller: Controller): void {
-        if (controller.template) {
-            element.innerHTML = controller.template;
+        const template = Squat.template(controller);
+        if (template) {
+            element.innerHTML = template;
             Squat.finish(element, path, controller);
         } else console.error("No template set on controller at path", path);
     }

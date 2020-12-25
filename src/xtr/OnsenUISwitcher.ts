@@ -12,7 +12,10 @@ export class OnsenUISwitcher extends Switcher {
             // deno-lint-ignore no-undef
             var wrapper = document.createElement('div');
             const controller = Provider.instance().getController(<string>options.page);
-            if (controller) wrapper.innerHTML = "" + controller.template;
+            if (controller) {
+                const template = Squat.template(controller);
+                wrapper.innerHTML = "" + template;
+            }
             options.page = wrapper.children[0];
             options.parent.appendChild(options.page);
             done(options.page);
@@ -26,24 +29,18 @@ export class OnsenUISwitcher extends Switcher {
     }
 
     _pushPage(element: Element, path: string, controller: Controller): void {
-        if (controller.template) {
-            (<ons.OnsNavigatorElement>element).pushPage(controller.constructor.name, {
-                callback: () => { OnsenUISwitcher.callback(element, path, controller) }
-            });
-        }
+        (<ons.OnsNavigatorElement>element).pushPage(controller.constructor.name, {
+            callback: () => { OnsenUISwitcher.callback(element, path, controller) }
+        });
     }
 
     _popPage(element: Element, path: string, controller: Controller) {
-        if (controller.template) {
-            console.debug("triggered.");
-            (<ons.OnsNavigatorElement>element).popPage({
-                callback: () => { OnsenUISwitcher.callback(element, path, controller) }
-            });
-        }
+        (<ons.OnsNavigatorElement>element).popPage({
+            callback: () => { OnsenUISwitcher.callback(element, path, controller) }
+        });
     }
 
     static callback(element: Element, path: string, controller: Controller) {
-        console.debug("callback");
         Squat.finish(element, path, controller);
     }
 }

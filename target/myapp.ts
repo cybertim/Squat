@@ -1,6 +1,6 @@
 import { Squat } from "../src/Squat.ts";
 import { Provider } from "../src/Provider.ts";
-import { Controller } from "../src/Interfaces.ts";
+import { Controller, Model } from "../src/Interfaces.ts";
 import { OnsenUISwitcher } from "../src/xtr/OnsenUISwitcher.ts";
 import { SqtBind } from "../src/std/SqtBind.ts";
 import { SqtSwitcher } from "../src/std/SqtSwitcher.ts";
@@ -17,30 +17,31 @@ type Todo = {
 
 type Todos = { list: Todo[] }
 
+@Model({
+    template: `
+    <section>
+    <span sqt-bind="bar"></span>
+    <input sqt-model="bar" type="text">
+    <ons-button sqt-click="foo">Increment</ons-button>
+</section>
+
+<section>
+    <input type="text" sqt-model="todo.description">
+    <input type="number" sqt-model="todo.priority">
+    <ons-button sqt-click="add">Add</ons-button>
+
+    <table>
+        <tr sqt-repeat="todo in todos.list">
+            <td>
+                <ons-button sqt-click="delete">delete</ons-button>
+            </td>
+            <td sqt-bind="todo.description"></td>
+            <td sqt-bind="todo.priority"></td>
+        </tr>
+    </table>
+</section>`
+})
 class MainCtrl extends Controller {
-    template = `
-    <section>
-        <span sqt-bind="bar"></span>
-        <input sqt-model="bar" type="text">
-        <ons-button sqt-click="foo">Increment</ons-button>
-    </section>
-    
-    <section>
-        <input type="text" sqt-model="todo.description">
-        <input type="number" sqt-model="todo.priority">
-        <ons-button sqt-click="add">Add</ons-button>
-    
-        <table>
-            <tr sqt-repeat="todo in todos.list">
-                <td>
-                    <ons-button sqt-click="delete">delete</ons-button>
-                </td>
-                <td sqt-bind="todo.description"></td>
-                <td sqt-bind="todo.priority"></td>
-            </tr>
-        </table>
-    </section>
-    `
 
     bar = "";
 
@@ -70,22 +71,28 @@ class MainCtrl extends Controller {
         console.log(sqope);
     }
 
-    initialize(sqope: Sqope) { }
+    sqtInit = (sqope: Sqope) => {
+
+    };
 }
 
-class SecondCtrl extends Controller {
-    template = `
+@Model({
+    template: `
     <input sqt-model="bar" type="text">
     <ons-button sqt-click="foo">TEst</ons-button>
     <span sqt-bind="bar"></span>`
 
+})
+class SecondCtrl extends Controller {
     bar = "abc"
     foo = (sqope: Sqope) => {
         // console.log(this.bar);
         Provider.instance().popPage();
     }
 
-    initialize(scope: Sqope) { }
+    sqtInit = (sqope: Sqope) => {
+
+    };
 
 }
 

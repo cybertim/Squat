@@ -57,13 +57,20 @@ export class Squat {
 
     public static finish(element: Element, path: string, controller: Controller) {
         const _sqope = Provider.instance().getSqope(path, controller);
-        console.debug(path, _sqope);
-        controller.doInitialization(_sqope);
+        if (!controller.initialized) {
+            controller.sqtInit(_sqope);
+            controller.initialized = true;
+        }
         if (!Squat.busy) {
             for (let i = 0; i < element.children.length; i++)
                 Squat.compile(element.children[i], _sqope);
             _sqope.digest();
         } else console.error("compiler is busy.");
+    }
+
+    public static template(controller: Controller) {
+        const obj = <unknown>controller;
+        return (<Record<string, string>>obj)["template"]
     }
 
 }

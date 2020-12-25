@@ -35,16 +35,32 @@ export type Directive = {
 }
 
 export abstract class Controller {
-    protected initialized = false;
-    abstract template: string | undefined;
-    abstract initialize(sqope: Sqope): void;
-    doInitialization(sqope: Sqope) {
-        if (!this.initialized) {
-            this.initialize(sqope);
-            this.initialized = true;
-        }
+    public initialized = false;
+    abstract sqtInit: (sqope: Sqope) => void;
+}
+
+type Constructor<T> = { new(...args: []): T };
+
+export function Model<T>(options: { template: string }) {
+    return function (Class: Constructor<T>) {
+        Object.defineProperty(Class.prototype, "template", {
+            value: options.template
+        });
     }
 }
+
+
+// export abstract class Controller {
+//     protected initialized = false;
+//     abstract template: string | undefined;
+//     abstract initialize(sqope: Sqope): void;
+//     doInitialization(sqope: Sqope) {
+//         if (!this.initialized) {
+//             this.initialize(sqope);
+//             this.initialized = true;
+//         }
+//     }
+// }
 
 export type Watcher = {
     name: string,
