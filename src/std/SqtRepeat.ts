@@ -15,8 +15,18 @@ export const SqtRepeat: Directive = {
 
         const render = (obj: unknown) => {
 
-            while (parentNode && parentNode.firstChild) {
-                parentNode.removeChild(parentNode.firstChild);
+            const nodeAmount = parentNode?.childNodes.length;
+            if (nodeAmount && parentNode) {
+                const rmNodeArr: Element[] = [];
+                for (let i = 0; i < nodeAmount; i++) {
+                    const node = parentNode?.childNodes[i];
+                    if (node instanceof Element) {
+                        if (node.hasAttribute("sqt-repeat") || node.hasAttribute("sqt-repeat-child")) {
+                            rmNodeArr.push(node);
+                        }
+                    }
+                }
+                for (const node of rmNodeArr) parentNode?.removeChild(node);
             }
 
             for (let i = 0; i < sqopes.length; i++)sqopes[i].destroy();
@@ -27,12 +37,13 @@ export const SqtRepeat: Directive = {
                 for (const e of v) {
                     const currentNode = <Element>elem.cloneNode(true);
                     currentNode.removeAttribute('sqt-repeat');
+                    currentNode.setAttribute("sqt-repeat-child", "");
                     const obj: Record<string, unknown> = {};
                     obj[itemName] = e;
                     const s = sqope.new(obj);
                     sqopes.push(s);
                     if (parentNode) parentNode.appendChild(currentNode);
-                    Squat.compile(currentNode, s);
+                    if (!Squat.busy) Squat.compile(currentNode, s);
                 }
             }
 

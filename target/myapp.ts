@@ -10,79 +10,72 @@ import { SqtModel } from "../src/std/SqtModel.ts";
 import { SqtRouter } from "../src/std/SqtRouter.ts";
 import { Sqope } from "../src/Sqope.ts";
 
-type Todo = {
-    description: string;
-    priority: number;
-}
-
-type Todos = { list: Todo[] }
-
 @Model({
     template: `
-    <ons-page>
-    <ons-toolbar>
-      <div class="center">Page 1</div>
-    </ons-toolbar>
 
-    <section>
-    <span sqt-bind="bar"></span>
-    <input sqt-model="bar" type="text">
-    <ons-button sqt-click="foo">Increment</ons-button>
-</section>
-
-<section>
-    <input type="text" sqt-model="todo.description">
-    <input type="number" sqt-model="todo.priority">
-    <ons-button sqt-click="add">Add</ons-button>
-
-    <table>
-        <tr sqt-repeat="todo in todos.list">
-            <td>
-                <ons-button sqt-click="delete">delete</ons-button>
-            </td>
-            <td sqt-bind="todo.description"></td>
-            <td sqt-bind="todo.priority"></td>
-        </tr>
-    </table>
-</section>
-</ons-page>`
+    <nav class="navbar sticky-top navbar-dark bg-dark">
+        <div class="container-fluid">
+            <span class="navbar-brand mb-0 h1">Demo</span>
+        </div>
+    </nav>
+    
+    <div class="container">
+    
+        <div>
+            <form>
+                <div class="mb-3">
+                    <label for="usernameInput" class="form-label">Username</label>
+                    <input sqt-model="username" type="text" class="form-control" id="usernameInput">
+                </div>
+                <div class="mb-3">
+                    <label for="passwordInput" class="form-label">Password</label>
+                    <input sqt-model="password" type="password" class="form-control">
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input">
+                    <label class="form-check-label">Check me out</label>
+                </div>
+    
+                <div class="d-grid gap-2">
+                    <button sqt-click="add" class="btn btn-primary" type="button">Button</button>
+                </div>
+            </form>
+        </div>
+    
+        <div sqt-repeat="item in items" class="card" style="width: 18rem;">
+            <div class="card-body">
+                <h5 class="card-title">Card title</h5>
+                <p class="card-text" sqt-bind="item"></p>
+                <div class="d-grid gap-2">
+                    <button sqt-click="delete" class="btn btn-primary">Go somewhere</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    `
 })
 class MainCtrl extends Controller {
 
-    bar = "";
+    username = "";
+    password = "";
+    items = ["a", "b", "c", "d", "e", "f", "g", "h", "i"];
 
-    todo: Todo = {
-        description: "",
-        priority: 0
-    }
-
-    todos: Todos = {
-        list: []
+    add = (sqope: Sqope) => {
+        this.items.push(this.username);
     }
 
     foo = (sqope: Sqope) => {
         Provider.instance().pushPage("/page2");
     }
 
-    add = (scope: Sqope) => {
-        if (this.todo && this.todos) {
-            this.todos.list.push({
-                description: this.todo.description,
-                priority: this.todo.priority
-            });
-        }
-    }
-
     delete = (sqope: Sqope) => {
         if (sqope.controller && !(sqope.controller instanceof Controller)) {
-            const todo = <Todo>sqope.controller["todo"]; // now we get the todo:)
-            console.debug("delete", todo.description);
+            const txt = <string>sqope.controller["item"]; // now we get the todo:)
+            console.debug("delete", txt);
         }
     }
 
-    sqtInit = (sqope: Sqope) => {
-
-    };
+    sqtInit = (sqope: Sqope) => { };
 }
 
 @Model({
@@ -128,5 +121,5 @@ Squat.bootstrap({
         { path: "/page2", controllerName: SecondCtrl.name }
     ],
     directives: [SqtBind, SqtRepeat, SqtClick, SqtModel, SqtRouter],
-    switcher: new OnsenUISwitcher()
+    switcher: new SqtSwitcher()
 });
