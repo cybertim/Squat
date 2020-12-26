@@ -31,9 +31,6 @@ export const SqtRepeat: Directive = {
                     obj[itemName] = e;
                     const s = sqope.new(obj);
                     sqopes.push(s);
-                    // TODO: decorate 'e' as a controller - add the methods - is it needed??
-                    console.log(e);
-                    //s.model[itemName] = e;                    
                     if (parentNode) parentNode.appendChild(currentNode);
                     Squat.compile(currentNode, s);
                 }

@@ -19,6 +19,11 @@ type Todos = { list: Todo[] }
 
 @Model({
     template: `
+    <ons-page>
+    <ons-toolbar>
+      <div class="center">Page 1</div>
+    </ons-toolbar>
+
     <section>
     <span sqt-bind="bar"></span>
     <input sqt-model="bar" type="text">
@@ -39,7 +44,8 @@ type Todos = { list: Todo[] }
             <td sqt-bind="todo.priority"></td>
         </tr>
     </table>
-</section>`
+</section>
+</ons-page>`
 })
 class MainCtrl extends Controller {
 
@@ -68,7 +74,10 @@ class MainCtrl extends Controller {
     }
 
     delete = (sqope: Sqope) => {
-        console.log(sqope);
+        if (sqope.controller && !(sqope.controller instanceof Controller)) {
+            const todo = <Todo>sqope.controller["todo"]; // now we get the todo:)
+            console.debug("delete", todo.description);
+        }
     }
 
     sqtInit = (sqope: Sqope) => {
@@ -78,66 +87,36 @@ class MainCtrl extends Controller {
 
 @Model({
     template: `
+        <ons-page>
+    <ons-toolbar>
+          <div class="left">
+      <ons-toolbar-button sqt-click="back">
+       back
+      </ons-toolbar-button>
+      </div>
+      <div class="center">Page 2</div>
+    </ons-toolbar>
+
     <input sqt-model="bar" type="text">
     <ons-button sqt-click="foo">TEst</ons-button>
-    <span sqt-bind="bar"></span>`
+    <span sqt-bind="bar"></span>
+    </ons-page>`
 
 })
 class SecondCtrl extends Controller {
     bar = "abc"
-    foo = (sqope: Sqope) => {
+    back = (sqope: Sqope) => {
         // console.log(this.bar);
         Provider.instance().popPage();
     }
-
+    foo = (sqope: Sqope) => {
+        console.debug(this.bar);
+    }
     sqtInit = (sqope: Sqope) => {
 
     };
 
 }
-
-// class OnsenPage1 extends Controller {
-//     template = `
-//     <ons-page id="page1">
-//     <ons-toolbar>
-//       <div class="center">Page 1</div>
-//     </ons-toolbar>
-
-//     <p>This is the first page.</p>
-
-//     <ons-button id="push-button" sqt-click="go()">Push page</ons-button>
-//   </ons-page>
-//     `
-//     initialize(scope: Scope) {
-//         scope.model['go()'] = (scope: Scope) => {
-//             Provider.instance().pushPage(scope, "/page2");
-//         }
-//     }
-
-// }
-
-// class OnsenPage2 extends Controller {
-//     template = `
-//     <ons-page id="page2">
-//     <ons-toolbar>
-//       <div class="left">
-//       <ons-toolbar-button sqt-click="terug()">
-//        back
-//       </ons-toolbar-button>
-//       </div>
-//       <div class="center"></div>
-//     </ons-toolbar>
-
-//     <p>This is the second page.</p>
-//   </ons-page>
-//     `
-//     initialize(scope: Scope) {
-//         scope.model['terug()'] = (scope: Scope) => {
-//             Provider.instance().popPage(scope);
-//         }
-//     }
-
-// }
 
 Squat.bootstrap({
     controllers: [
@@ -149,5 +128,5 @@ Squat.bootstrap({
         { path: "/page2", controllerName: SecondCtrl.name }
     ],
     directives: [SqtBind, SqtRepeat, SqtClick, SqtModel, SqtRouter],
-    switcher: new SqtSwitcher()
+    switcher: new OnsenUISwitcher()
 });
